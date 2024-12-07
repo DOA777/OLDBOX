@@ -1,0 +1,134 @@
+local player = game:GetService("Players").LocalPlayer
+local camera = game:GetService("Workspace").CurrentCamera
+ 
+local Settings = {
+    Color = Color3.fromRGB(255, 0, 0),
+    Thickness = 1,
+    Transparency = 0.2, -- 1 visible, 0 not visible
+    Team_Check = false
+}
+ 
+local function NewQuad()
+    local q = Drawing.new("Quad")
+    q.Visible = false
+    q.Transparency = Settings.Transparency
+    q.Color = Settings.Color
+    q.Thickness = Settings.Thickness
+    q.Filled = true
+    q.PointA = Vector2.new(0, 0)
+    q.PointB = Vector2.new(0, 0)
+    q.PointC = Vector2.new(0, 0)
+    q.PointD = Vector2.new(0, 0) 
+    return q
+end
+ 
+local function DrawBox(plr)
+    local quads = {
+        Top = NewQuad(),
+        Bottom = NewQuad(),
+        Side1 = NewQuad(),
+        Side2 = NewQuad(),
+        Side3 = NewQuad(),
+        Side4 = NewQuad()
+    }
+    local function Updater()
+        local c
+        c = game:GetService("RunService").RenderStepped:Connect(function()
+            if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") ~= nil then
+                local pos, vis = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if vis then
+                    -- Drawing ESP
+                    local Scale = plr.Character.Head.Size.Y
+                    local Size = Vector3.new(2, 3, 1.5) * (Scale)
+ 
+                    local Top1 = camera:WorldToViewportPoint((plr.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, Size.Y, -Size.Z)).p)
+                    local Top2 = camera:WorldToViewportPoint((plr.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, Size.Y, Size.Z)).p)
+                    local Top3 = camera:WorldToViewportPoint((plr.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, Size.Y, Size.Z)).p)
+                    local Top4 = camera:WorldToViewportPoint((plr.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, Size.Y, -Size.Z)).p)
+ 
+                    local Bottom1 = camera:WorldToViewportPoint((plr.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, -Size.Y, -Size.Z)).p)
+                    local Bottom2 = camera:WorldToViewportPoint((plr.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, -Size.Y, Size.Z)).p)
+                    local Bottom3 = camera:WorldToViewportPoint((plr.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, -Size.Y, Size.Z)).p)
+                    local Bottom4 = camera:WorldToViewportPoint((plr.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, -Size.Y, -Size.Z)).p)
+ 
+                    quads.Top.PointA = Vector2.new(Top1.X, Top1.Y)
+                    quads.Top.PointB = Vector2.new(Top2.X, Top2.Y)
+                    quads.Top.PointC = Vector2.new(Top3.X, Top3.Y)
+                    quads.Top.PointD = Vector2.new(Top4.X, Top4.Y)
+ 
+                    quads.Bottom.PointA = Vector2.new(Bottom1.X, Bottom1.Y)
+                    quads.Bottom.PointB = Vector2.new(Bottom2.X, Bottom2.Y)
+                    quads.Bottom.PointC = Vector2.new(Bottom3.X, Bottom3.Y)
+                    quads.Bottom.PointD = Vector2.new(Bottom4.X, Bottom4.Y)
+ 
+                    quads.Side1.PointA = Vector2.new(Top1.X, Top1.Y)
+                    quads.Side1.PointB = Vector2.new(Top2.X, Top2.Y)
+                    quads.Side1.PointC = Vector2.new(Bottom2.X, Bottom2.Y)
+                    quads.Side1.PointD = Vector2.new(Bottom1.X, Bottom1.Y)
+ 
+                    quads.Side2.PointA = Vector2.new(Top2.X, Top2.Y)
+                    quads.Side2.PointB = Vector2.new(Top3.X, Top3.Y)
+                    quads.Side2.PointC = Vector2.new(Bottom3.X, Bottom3.Y)
+                    quads.Side2.PointD = Vector2.new(Bottom2.X, Bottom2.Y)
+ 
+                    quads.Side3.PointA = Vector2.new(Top3.X, Top3.Y)
+                    quads.Side3.PointB = Vector2.new(Top4.X, Top4.Y)
+                    quads.Side3.PointC = Vector2.new(Bottom4.X, Bottom4.Y)
+                    quads.Side3.PointD = Vector2.new(Bottom3.X, Bottom3.Y)
+ 
+                    quads.Side4.PointA = Vector2.new(Top4.X, Top4.Y)
+                    quads.Side4.PointB = Vector2.new(Top1.X, Top1.Y)
+                    quads.Side4.PointC = Vector2.new(Bottom1.X, Bottom1.Y)
+                    quads.Side4.PointD = Vector2.new(Bottom4.X, Bottom4.Y)
+ 
+                    if Settings.Team_Check then
+                        if plr.TeamColor == player.TeamColor then
+                            for i, v in pairs(quads) do
+                                v.Color = Color3.fromRGB(0, 255, 0) -- green
+                            end
+                        else 
+                            for i, v in pairs(quads) do
+                                v.Color = Color3.fromRGB(255, 0, 0) -- red
+                            end
+                        end
+                    else 
+                        for i, v in pairs(quads) do
+                            v.Color = Settings.Color
+                        end
+                    end
+ 
+                    for i, v in pairs(quads) do
+                        v.Visible = true
+                    end
+                else 
+                    for i, v in pairs(quads) do
+                        v.Visible = false
+                    end
+                end
+            else 
+                for i, v in pairs(quads) do
+                    v.Visible = false
+                end
+                if game:GetService("Players"):FindFirstChild(plr.Name) == nil then
+                    for i, v in pairs(quads) do
+                        v:Remove()
+                    end
+                    c:Disconnect()
+                end
+            end
+        end)
+    end
+    coroutine.wrap(Updater)()
+end
+ 
+for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+    if v.Name ~= player.Name then
+        DrawBox(v)
+    end
+end
+ 
+game:GetService("Players").PlayerAdded:Connect(function(newplr)
+    if newplr.Name ~= player.Name then
+        DrawBox(newplr)
+    end
+end)
